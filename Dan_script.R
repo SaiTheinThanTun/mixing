@@ -1,4 +1,3 @@
-
 library(deSolve)
 library(TSA)
 
@@ -102,9 +101,9 @@ runFIRST <- function(initprev, scenario, param)
       #pop 2
       dCinc_det2 <- ps*tau*lam2*S2+pr*tau*lam2*R2+pr*tau*lam2*I2
       dCinc_tot2 <- ps*lam2*S2+pr*lam2*R2+pr*lam2*I2
-      dS2 <- mu*P2 - mu_out*S2 + omega * R2 -lam1 * S2
-      dI2 <- muC*P2 - mu_out*I2 + lam1*S2 - nuC*I2 + lam1*R2 
-      dR2 <- - mu_out*R2 - omega*R2 - lam1*R2    + nuC*I2    
+      dS2 <- mu*P2 - mu_out*S2 + omega * R2 -lam2 * S2
+      dI2 <- muC*P2 - mu_out*I2 + lam2*S2 - nuC*I2 + lam2*R2 
+      dR2 <- - mu_out*R2 - omega*R2 - lam2*R2    + nuC*I2    
       
       list(c(dY, dCinc_det1, dCinc_tot1, dS1, dI1, dR1, dCinc_det2, dCinc_tot2, dS2, dI2, dR2))  
     })
@@ -122,17 +121,17 @@ runFIRST <- function(initprev, scenario, param)
   # population
   times<-out[,1]+startyear
   pop<-rowSums(out[,ipop])
-  iinc_det <- rowSums(out[,iinc_det])
-  iinc_tot <- rowSums(out[,iinc_tot])
+  inc_det <- rowSums(out[,iinc_det])
+  inc_tot <- rowSums(out[,iinc_tot])
   
   # clinical incidence detected per 1000 per month
-  tci_det <- out[,iinc_det]
+  tci_det <- inc_det #out[,iinc_det]
   clinmonth_det <- tci_det
   clinmonth_det[1] <- 0
   clinmonth_det[2:length(times)] <- 1000*(tci_det[2:length(times)] - tci_det[1:(length(times)-1)])/pop[2:length(times)]
   
   # clinical incidence total per 1000 per month
-  tci_tot <- out[,iinc_tot]
+  tci_tot <- inc_tot
   clinmonth_tot <- tci_tot
   clinmonth_tot[1] <- 0
   clinmonth_tot[2:length(times)] <- 1000*(tci_tot[2:length(times)] - tci_tot[1:(length(times)-1)])/pop[2:length(times)]
@@ -142,7 +141,7 @@ runFIRST <- function(initprev, scenario, param)
   prevalence <- 100*rowSums(out[,iprev])/pop
   GMSout<-matrix(NA,nrow=length(times),ncol=4)
   GMSout[,1]<-times
-  GMSout[,2]<-clinmonth_det
+  GMSout[,2]<-clinmonth_det #rep(length(clinmonth_det), length(times_out))
   GMSout[,3]<-clinmonth_tot
   GMSout[,4]<-prevalence
   
@@ -185,9 +184,30 @@ scenario_i<-c(EDATon = 1,
               MDAon = 0,
               primon = 0,
               MSATon = 0)
+###################
+# parameters <- c(gamma = 0.1,         #recovery rate
+#                 alpha= .5,             #mixing between populations
+#                 delta = 2,            #relationship between transmission in pop1 and pop2
+#                 epsilonh=0.23,      # per bite probability of an infectious mosquito infecting a human
+#                 epsilonm=0.5,       # per bite probability of an infectious human infecting a mosquito
+#                 b=365/3,            # per mosquito rate of biting
+#                 deltam=365/14,      # rate leaving latent period          
+#                 gammam=365/10,       # mosquito death rate
+#                 bh = 1,                # bites per human per year
+#                 mu = 50,            #life expectancy
+#                 omega = 1/2,           #duration of immunity in years
+#                 lossd = 30,          #loss of drug prophylactic effect
+#                 nuTr = 14,            #days of infectiousness after ACT
+#                 timei = 2018,
+#                 primon = 1,            #primaquine use
+#                 nuTrp = 7           # days of infectiosness after treatment ACT+primaquine [N]
+#                 
+# )
 
 GMSout0 <- runFIRST(initprevR, scenario_0, parametersR)
 
+
+head(GMSout0)
 par(mfrow=c(1,3))
 #plot(GMSouti[,1], GMSouti[,2], type="l")
 plot(GMSout0[,1], GMSout0[,2], type="l")
@@ -195,25 +215,7 @@ plot(GMSout0[,1], GMSout0[,3], type="l")
 plot(GMSout0[,1], GMSout0[,4], type="l")
 
 
-###################
-#parameters <- c(gamma = 0.1,         #recovery rate
-alpha= .5,             #mixing between populations
-delta = 2,            #relationship between transmission in pop1 and pop2
-epsilonh=0.23,      # per bite probability of an infectious mosquito infecting a human
-epsilonm=0.5,       # per bite probability of an infectious human infecting a mosquito
-b=365/3,            # per mosquito rate of biting
-deltam=365/14,      # rate leaving latent period          
-gammam=365/10,       # mosquito death rate
-bh = 1,                # bites per human per year
-mu = 50,            #life expectancy
-omega = 1/2,           #duration of immunity in years
-lossd = 30,          #loss of drug prophylactic effect
-nuTr = 14,            #days of infectiousness after ACT
-timei = 2018,
-primon = 1,            #primaquine use
-nuTrp = 7           # days of infectiosness after treatment ACT+primaquine [N]
 
-)
 
 #times = seq(2010, 2025, 1/12)
 
@@ -221,7 +223,7 @@ nuTrp = 7           # days of infectiosness after treatment ACT+primaquine [N]
 
 #out <- as.data.frame(ode(y = init, times = times, func = sir, parms = parameters))
 
-out$time <- NULL
-
-matplot([,1], GMSout0, type = "l", xlab = "Time", ylab = "Ss, Is and Rs", 
+#out$time <- NULL
+par(mfrow=c(1,1))
+matplot(GMSout0[,1], GMSout0[,-1], type = "l", xlab = "Time", ylab = "Ss, Is and Rs",
         main = "SIR Model", lwd = 2, lty = 1, bty = "l", col = 2:4)
